@@ -67,15 +67,16 @@ def build_estimator(model_dir):
                                                     ])
 
   # Wide columns and deep columns.
-  wide_columns = [gender, native_country, education, occupation, workclass,
-                  marital_status, relationship, age_buckets,
-                  tf.contrib.layers.crossed_column([education, occupation],
-                                                   hash_bucket_size=int(1e4)),
-                  tf.contrib.layers.crossed_column(
-                      [age_buckets, race, occupation],
-                      hash_bucket_size=int(1e6)),
-                  tf.contrib.layers.crossed_column([native_country, occupation],
-                                                   hash_bucket_size=int(1e4))]
+  # wide_columns = [gender, native_country, education, occupation, workclass,
+  #                 marital_status, relationship, age_buckets,
+  #                 tf.contrib.layers.crossed_column([education, occupation],
+  #                                                  hash_bucket_size=int(1e4)),
+  #                 tf.contrib.layers.crossed_column(
+  #                     [age_buckets, race, occupation],
+  #                     hash_bucket_size=int(1e6)),
+  #                 tf.contrib.layers.crossed_column([native_country, occupation],
+  #                                                  hash_bucket_size=int(1e4))]
+
   deep_columns = [
       tf.contrib.layers.embedding_column(workclass, dimension=8),
       tf.contrib.layers.embedding_column(education, dimension=8),
@@ -92,21 +93,9 @@ def build_estimator(model_dir):
       hours_per_week,
   ]
 
-  if FLAGS.model_type == "wide":
-    m = tf.contrib.learn.LinearClassifier(model_dir=model_dir,
-                                          feature_columns=wide_columns)
-  elif FLAGS.model_type == "deep":
-    m = tf.contrib.learn.DNNClassifier(model_dir=model_dir,
-                                       feature_columns=deep_columns,
-                                       hidden_units=[100, 50])
-  else:
-    m = tf.contrib.learn.DNNLinearCombinedClassifier(
-        model_dir=model_dir,
-        linear_feature_columns=wide_columns,
-        dnn_feature_columns=deep_columns,
-        dnn_hidden_units=[100, 50])
-  return m
+  m = tf.contrib.learn.DNNClassifier(model_dir=model_dir, feature_columns=deep_columns, hidden_units=[100, 50])
 
+  return m
 
 def input_fn(df):
   """Input builder function."""
@@ -127,7 +116,6 @@ def input_fn(df):
   label = tf.constant(df[LABEL_COLUMN].values)
   # Returns the feature columns and the label.
   return feature_cols, label
-
 
 def train_and_eval():
   """Train and evaluate the model."""
@@ -158,10 +146,8 @@ def train_and_eval():
   for key in sorted(results):
     print("%s: %s" % (key, results[key]))
 
-
 def main(_):
   train_and_eval()
-
 
 if __name__ == "__main__":
   tf.app.run()
