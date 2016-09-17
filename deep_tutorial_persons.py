@@ -24,19 +24,34 @@ flags.DEFINE_string(
     "",
     "Path to the test data.")
 
+# used when loading the csv file
 COLUMNS = ["age", "workclass", "fnlwgt", "education", "education_num",
            "marital_status", "occupation", "relationship", "race", "gender",
            "capital_gain", "capital_loss", "hours_per_week", "native_country",
            "income_bracket"]
+
+# this is the field in the training data where the classifier looks for the target value
 LABEL_COLUMN = "label"
+
+# these labels identify features that are represented by a grab-bag of strings like "cook" or "argentina"
 CATEGORICAL_COLUMNS = ["workclass", "education", "marital_status", "occupation",
                        "relationship", "race", "gender", "native_country"]
+
+# these labels identify features that are represented by real numbers like 3 and 1.12
 CONTINUOUS_COLUMNS = ["age", "education_num", "capital_gain", "capital_loss",
                       "hours_per_week"]
 
 def build_estimator(model_dir):
   """Build an estimator."""
   # Sparse base columns.
+
+  # returns a scaffold to train models
+  # load in the column information
+  # return the object
+
+  # build the column objects to
+  # gender and race are columns where we know what the keys are
+  # so we pass the known keys
   gender = tf.contrib.layers.sparse_column_with_keys(column_name="gender",
                                                      keys=["female", "male"])
   race = tf.contrib.layers.sparse_column_with_keys(column_name="race",
@@ -45,6 +60,7 @@ def build_estimator(model_dir):
                                                          "Black", "Other",
                                                          "White"])
 
+  # these are columns where the values are all over the place
   education = tf.contrib.layers.sparse_column_with_hash_bucket("education", hash_bucket_size=1000)
   marital_status = tf.contrib.layers.sparse_column_with_hash_bucket("marital_status", hash_bucket_size=100)
   relationship = tf.contrib.layers.sparse_column_with_hash_bucket("relationship", hash_bucket_size=100)
@@ -59,24 +75,7 @@ def build_estimator(model_dir):
   capital_loss = tf.contrib.layers.real_valued_column("capital_loss")
   hours_per_week = tf.contrib.layers.real_valued_column("hours_per_week")
 
-  # Transformations.
-  age_buckets = tf.contrib.layers.bucketized_column(age,
-                                                    boundaries=[
-                                                        18, 25, 30, 35, 40, 45,
-                                                        50, 55, 60, 65
-                                                    ])
-
-  # Wide columns and deep columns.
-  # wide_columns = [gender, native_country, education, occupation, workclass,
-  #                 marital_status, relationship, age_buckets,
-  #                 tf.contrib.layers.crossed_column([education, occupation],
-  #                                                  hash_bucket_size=int(1e4)),
-  #                 tf.contrib.layers.crossed_column(
-  #                     [age_buckets, race, occupation],
-  #                     hash_bucket_size=int(1e6)),
-  #                 tf.contrib.layers.crossed_column([native_country, occupation],
-  #                                                  hash_bucket_size=int(1e4))]
-
+  # Deep columns
   deep_columns = [
       tf.contrib.layers.embedding_column(workclass, dimension=8),
       tf.contrib.layers.embedding_column(education, dimension=8),
@@ -119,9 +118,10 @@ def input_fn(df):
 
 def train_and_eval():
   """Train and evaluate the model."""
-  # train_file_name, test_file_name = maybe_download()
+
   train_file_name = './persons.data'
   test_file_name = './persons.test'
+
   df_train = pd.read_csv(
       tf.gfile.Open(train_file_name),
       names=COLUMNS,
@@ -132,17 +132,25 @@ def train_and_eval():
       skipinitialspace=True,
       skiprows=1)
 
+  # Iterate over the training data and build the column for the actual classifier
+  # df_train and df_test will have a new column called 'label' that contains
+  # either a '0' or a '1'.
+  # Everything that isn't a in the column 'label' is a feature to use in the training
+
   df_train[LABEL_COLUMN] = (df_train["income_bracket"].apply(lambda x: ">50K" in x)).astype(int)
+
   # print(df_train[LABEL_COLUMN])
+
+  # Do the same for the separate test data
   df_test[LABEL_COLUMN] = (df_test["income_bracket"].apply(lambda x: ">50K" in x)).astype(int)
 
   model_dir = tempfile.mkdtemp() if not FLAGS.model_dir else FLAGS.model_dir
   #model_dir = './model/'
   print("model directory = %s" % model_dir)
 
-  m = build_estimator(model_dir)
-  m.fit(input_fn=lambda: input_fn(df_train), steps=FLAGS.train_steps)
-  results = m.evaluate(input_fn=lambda: input_fn(df_test), steps=1)
+  model = build_estimator(model_dir)
+  model.fit(input_fn=lambda: input_fn(df_train), steps=FLAGS.train_steps)
+  results = model.evaluate(input_fn=lambda: input_fn(df_test), steps=1)
   for key in sorted(results):
     print("%s: %s" % (key, results[key]))
 
