@@ -1,7 +1,7 @@
 var fs = require('fs')
 var crypto = require('crypto')
 
-var n_elements = 10000
+var n_elements = 1000
 
 console.log(make_bytes(true))
 console.log(make_bytes(false))
