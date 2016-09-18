@@ -1,7 +1,7 @@
 var fs = require('fs')
 var crypto = require('crypto')
 
-var n_elements = 1000
+var n_elements = 100000
 
 console.log(make_bytes(true))
 console.log(make_bytes(false))
@@ -17,7 +17,7 @@ for(var i = 0; i < n_elements; i++){
   }
 }
 
-fs.writeFileSync('./train.csv', csv_lines.slice(0,n_elements/2).join('\n'))
+//fs.writeFileSync('./train.csv', csv_lines.slice(0,n_elements/2).join('\n'))
 fs.writeFileSync('./test.csv', csv_lines.slice(n_elements/2).join('\n'))
 
 function make_bytes(restricted){

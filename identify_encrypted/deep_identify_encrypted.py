@@ -31,7 +31,7 @@ COLUMNS = ["data", "is_restricted"]
 LABEL_COLUMN = "label"
 
 # these labels identify features that are represented by a grab-bag of strings like "cook" or "argentina"
-CATEGORICAL_COLUMNS = ["data", "is_restricted"]
+CATEGORICAL_COLUMNS = ["data"]
 
 # these labels identify features that are represented by real numbers like 3 and 1.12
 CONTINUOUS_COLUMNS = []
@@ -47,19 +47,18 @@ def build_estimator(model_dir):
   # build the column objects to
   # gender and race are columns where we know what the keys are
   # so we pass the known keys
-  is_restricted = tf.contrib.layers.sparse_column_with_keys(column_name="is_restricted",
-                                                     keys=["yes", "no"])
+  # is_restricted = tf.contrib.layers.sparse_column_with_keys(column_name="is_restricted",
+  #                                                    keys=["yes", "no"])
 
   # these are columns where the values are all over the place
   data = tf.contrib.layers.sparse_column_with_hash_bucket("data", hash_bucket_size=10000)
 
   # Deep columns
-  deep_columns = [
-      tf.contrib.layers.embedding_column(data, dimension=8),
-      tf.contrib.layers.embedding_column(is_restricted, dimension=8)
-  ]
+  # deep_columns = [ tf.contrib.layers.embedding_column(data, dimension=8), tf.contrib.layers.embedding_column(is_restricted, dimension=8) ]
+  # deep_columns = [ tf.contrib.layers.embedding_column(data, dimension=8) ]
+  deep_columns = [ tf.contrib.layers.embedding_column(data, dimension=8) ]
 
-  m = tf.contrib.learn.DNNClassifier(model_dir=model_dir, feature_columns=deep_columns, hidden_units=[100, 50])
+  m = tf.contrib.learn.DNNClassifier(model_dir=model_dir, feature_columns=deep_columns, hidden_units=[100, 100, 100, 100])
 
   return m
 

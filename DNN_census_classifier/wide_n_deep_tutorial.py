@@ -67,15 +67,20 @@ def build_estimator(model_dir):
                                                     ])
 
   # Wide columns and deep columns.
-  wide_columns = [gender, native_country, education, occupation, workclass,
-                  marital_status, relationship, age_buckets,
-                  tf.contrib.layers.crossed_column([education, occupation],
-                                                   hash_bucket_size=int(1e4)),
-                  tf.contrib.layers.crossed_column(
-                      [age_buckets, race, occupation],
-                      hash_bucket_size=int(1e6)),
-                  tf.contrib.layers.crossed_column([native_country, occupation],
-                                                   hash_bucket_size=int(1e4))]
+  wide_columns = [
+    gender,
+    native_country,
+    education,
+    occupation,
+    workclass,
+    marital_status,
+    relationship,
+    age_buckets,
+    tf.contrib.layers.crossed_column([education, occupation], hash_bucket_size=int(1e4)),
+    tf.contrib.layers.crossed_column([age_buckets, race, occupation], hash_bucket_size=int(1e6)),
+    tf.contrib.layers.crossed_column([native_country, occupation], hash_bucket_size=int(1e4))
+  ]
+
   deep_columns = [
       tf.contrib.layers.embedding_column(workclass, dimension=8),
       tf.contrib.layers.embedding_column(education, dimension=8),
@@ -89,16 +94,13 @@ def build_estimator(model_dir):
       education_num,
       capital_gain,
       capital_loss,
-      hours_per_week,
+      hours_per_week
   ]
 
   if FLAGS.model_type == "wide":
-    m = tf.contrib.learn.LinearClassifier(model_dir=model_dir,
-                                          feature_columns=wide_columns)
+    m = tf.contrib.learn.LinearClassifier(model_dir=model_dir, feature_columns=wide_columns)
   elif FLAGS.model_type == "deep":
-    m = tf.contrib.learn.DNNClassifier(model_dir=model_dir,
-                                       feature_columns=deep_columns,
-                                       hidden_units=[100, 50])
+    m = tf.contrib.learn.DNNClassifier(model_dir=model_dir, feature_columns=deep_columns, hidden_units=[100, 50])
   else:
     m = tf.contrib.learn.DNNLinearCombinedClassifier(
         model_dir=model_dir,
